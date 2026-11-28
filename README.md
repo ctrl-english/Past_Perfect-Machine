@@ -10,7 +10,7 @@ Jeu pédagogique en ligne pour travailler la différence entre **past perfect si
 | 🔀 Mélange des mots | Reconstituer 5 phrases en remettant les mots dans le bon ordre |
 | ✍️ La machine à écrire | Choisir la bonne forme du past perfect entre deux propositions, sur 8 phrases |
 | ⚡ Quiz éclair | 10 questions en 20 secondes chacune |
-| 🧠 Mémo du past perfect | Retrouver les 8 paires de phrases le plus vite possible |
+| 🧠 Mémo du past perfect | Retrouver les 5 paires de phrases le plus vite possible |
 
 Le tout est complété par un **Mémo des règles** (past perfect simple vs past perfect be + ing, avec le tableau des marqueurs) consultable avant de jouer, un système d'étoiles (jusqu'à 15 ★) et un rapport de résultats envoyé au professeur. Les phrases s'appuient sur des situations de commerce et de marketing, adaptées aux BTS tertiaires.
 
@@ -28,7 +28,7 @@ Tout le contenu pédagogique se trouve dans les blocs de données au début de `
 
 - `QUIZ_DATA` : les 10 questions du quiz, avec les options et l'explication (`why`) affichée après la réponse
 - `SORT_ROLES` et `SORT_DATA` : les boîtes (les emplois du past perfect) et les phrases du jeu de tri
-- `MEMORY_DATA` : les 8 paires du mémoire
+- `MEMORY_DATA` : les 5 paires du mémoire
 - `SCRAMBLE_DATA` : les 5 phrases à reconstituer
 - `FILL_DATA` : les 8 phrases de la machine à écrire
 - `REPORT_CONFIG.teacherEmail` : l'adresse e-mail qui reçoit les rapports

@@ -1,5 +1,6 @@
 <!doctype html>
 <!-- Version 2026-11-22 : premiere version, sur le modele nettoyee de The Perfect Machine, adaptee au past perfect (simple et be + ing) -->
+<!-- Version 2026-11-28 : compteur de session corrigé (un essai compte), mémoire simplifiée à 5 paires, 3 étoiles à 10 coups -->
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -98,7 +99,7 @@ main{ max-width:1020px; margin:0 auto; padding:10px 18px 70px; }
 .feedback{ margin-top:14px; min-height:24px; font-size:.95rem; line-height:1.5; }
 
 /* mémo (memory) */
-.mem-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.mem-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
 @media (max-width:560px){ .mem-grid{ grid-template-columns:repeat(2,1fr); } }
 .mcard{ font:inherit; color:var(--txt); min-height:92px; border-radius:12px; border:1px solid var(--line); background:linear-gradient(135deg,#232858,#1a1d45); cursor:pointer; padding:10px; position:relative; }
 .mcard .star{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:1.4rem; }
@@ -235,9 +236,6 @@ const MEMORY_DATA = [
   ["She had been training", "the new intern for a month."],
   ["When we counted the till,", "we realised the cashier had made a mistake."],
   ["He had never seen", "such a crowded sale before that day."],
-  ["The staff had been preparing", "the winter window for a whole week."],
-  ["By the time the clients arrived,", "the manager had locked the showroom."],
-  ["The honey supplier had worked with us", "since the shop opened."],
   ["They had been queuing outside", "since dawn when the doors opened."]
 ];
 
@@ -290,7 +288,7 @@ function saveJSON(key, val){
 let best = loadJSON("pastPerfectMachineBest", {});
 let soundOn = loadJSON("pastPerfectMachineSound", true);
 let student = loadJSON("pastPerfectMachineStudent", null);
-let sessionResults = {};
+let sessionResults = {}; sessionAttempts = {};
 let lastGame = null;
 let currentCleanup = null;
 
@@ -409,7 +407,8 @@ function renderMenu(){
     + '<div><span class="tag">fiche</span></div>'
     + '</div>';
   const total = GAMES.reduce(function(s, g){ return s + (best[g.id] || 0); }, 0);
-  const played = GAMES.filter(function(g){ return sessionResults[g.id]; }).length;
+  const sesTotal = GAMES.reduce(function(s, g){ const r = sessionResults[g.id]; return s + (r ? r.stars : 0); }, 0);
+  const played = GAMES.filter(function(g){ return sessionResults[g.id] || sessionAttempts[g.id]; }).length;
   const playedAll = played === GAMES.length;
   const sendHint = playedAll
     ? "Toutes les épreuves ont été jouées : envoi possible."
@@ -418,7 +417,7 @@ function renderMenu(){
     + '<h2>Choisis ton mini-jeu</h2>'
     + '<p class="rules">Objectif : maîtriser les deux <b>formes du past perfect</b> : le <b>past perfect simple</b> et le <b>past perfect be + ing</b>. Gagne des étoiles sur chaque jeu pour devenir Maître du Past Perfect !</p>'
     + '<div class="menu-grid">' + memoCard + cards + '</div>'
-    + '<p class="total">Étoiles gagnées : <strong>' + total + ' / ' + (GAMES.length * 3) + ' ★</strong> (records gardés dans ce navigateur) · '
+    + '<p class="total">Ta session : <strong>' + sesTotal + ' / ' + (GAMES.length * 3) + ' ★</strong> · Records de ce navigateur : ' + total + ' / ' + (GAMES.length * 3) + ' ★ · '
     + '<button class="linklike" id="reset-scores">réinitialiser</button></p>'
     + '<p class="player">👤 Joueur : <b>' + (student && student.name ? student.name : "?") + '</b> · '
     + '<button class="linklike" id="change-player">changer de joueur</button></p>'
@@ -502,6 +501,7 @@ function renderQuiz(){
   function answer(k){
     if(st.locked) return;
     st.locked = true;
+    sessionAttempts.quiz = true;
     clearInterval(st.timer);
     const it = items[st.i];
     const btns = Array.prototype.slice.call(main.querySelectorAll("#q-opts .opt"));
@@ -616,6 +616,7 @@ function renderSort(){
     });
   });
   btnCheck.addEventListener("click", function(){
+    sessionAttempts.sort = true;
     let wrong = 0;
     items.forEach(function(it){
       if(it.placed && !it.locked){
@@ -679,6 +680,7 @@ function renderMemory(){
     b.classList.add("open");
     tone(520, .06, "sine", .08);
     if(open.length === 2){
+      sessionAttempts.memory = true;
       moves++;
       main.querySelector("#m-moves").textContent = "Coups : " + moves;
       const a = deck[open[0]], c = deck[open[1]];
@@ -703,9 +705,9 @@ function renderMemory(){
     }
   }
   function finish(){
-    const stars = moves <= 14 ? 3 : moves <= 18 ? 2 : 1;
-    const msg = moves <= 14 ? "Mémoire de maître !"
-      : moves <= 18 ? "Solide ! Tu peux encore gagner une étoile."
+    const stars = moves <= 10 ? 3 : moves <= 14 ? 2 : 1;
+    const msg = moves <= 10 ? "Mémoire de maître !"
+      : moves <= 14 ? "Solide ! Tu peux encore gagner une étoile."
       : "Terminé ! Retente pour améliorer ton record.";
     showResult({ id:"memory", ico:"🧠", title:"Mémo du past perfect", big: moves + " coups", stars:stars, msg:msg });
   }
@@ -771,6 +773,7 @@ function renderScramble(){
     });
   }
   btnCheck.addEventListener("click", function(){
+    sessionAttempts.scramble = true;
     const s = sentences[sIdx];
     if(answer.length === 0){
       fb.textContent = "Place au moins un mot dans la ligne du haut !";
@@ -863,6 +866,7 @@ function renderFill(){
   function answered(){ return items.filter(function(i){ return i.picked; }).length; }
   function refresh(){ btnCheck.disabled = answered() < half; }
   btnCheck.addEventListener("click", function(){
+    sessionAttempts.fill = true;
     checks++;
     let correct = 0;
     items.forEach(function(it){
@@ -960,7 +964,7 @@ function renderWelcome(){
     }
     student = { name: n, classe: classe.value.trim() };
     saveJSON("pastPerfectMachineStudent", student);
-    sessionResults = {};
+    sessionResults = {}; sessionAttempts = {};
     renderMenu();
   }
   main.querySelector("#w-go").addEventListener("click", go);
@@ -980,7 +984,7 @@ function buildReport(){
       lines.push(g.title + " : " + r.big + " · " + starsHTML(r.stars));
       total += r.stars;
     }else{
-      lines.push(g.title + " : non joué");
+      lines.push(g.title + (sessionAttempts[g.id] ? " : tenté, non terminé" : " : non joué"));
     }
   });
   lines.push("Total : " + total + " / " + (GAMES.length * 3) + " étoiles");
